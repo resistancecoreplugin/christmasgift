@@ -1,0 +1,61 @@
+# ChristmasGift Plugin Main Configuration
+
+# General settings
+settings:
+  # Cooldown in milliseconds
+  gift-cooldown: 1000
+  # Whether to broadcast rewards to entire server
+  broadcast-rewards: true
+  # Broadcast message format
+  broadcast-format: "&a%player% received %reward% from Christmas Gift!"
+
+# Combo system settings
+combo:
+  # Enable/disable combo system
+  enabled: true
+  # Combo timeout (in seconds)
+  timeout: 10
+  # Combo tiers with multipliers
+  tiers:
+    tier1:
+      gifts-required: 3
+      multiplier: 1.5
+      name: "# COMBO #"
+      color: "&b"
+    tier2:
+      gifts-required: 5
+      multiplier: 2.0
+      name: "* MEGA COMBO *"
+      color: "&6"
+    tier3:
+      gifts-required: 10
+      multiplier: 3.0
+      name: "@ ULTRA COMBO @"
+      color: "&d"
+
+# Effects settings
+effects:
+  # Effects when opening gift
+  enable-effects: true
+  enable-sounds: true
+  # Sound volume (0.0 - 1.0)
+  sound-volume: 1.0
+  # Sound pitch (0.0 - 2.0)
+  sound-pitch: 1.0
+
+# Item settings
+gift:
+  # Display name for gift item
+  display-name: "&c&lChristmas Gift"
+  # Item description
+  lore:
+    - "&7Right click to open!"
+    - "&7+ Contains special rewards!"
+    - "&7+ From Common to Mythic"
+    - ""
+    - "&e&lCOMBO BONUS:"
+    - "&73+ gifts = 1.5x rewards"
+    - "&75+ gifts = 2.0x rewards"
+    - "&710+ gifts = 3.0x rewards"
+  # Material for gift item
+  material: CHEST

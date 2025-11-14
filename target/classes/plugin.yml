@@ -1,0 +1,18 @@
+name: ChristmasGift
+version: '1.0'
+main: com.resistancecore.christmasgift.ChristmasGift
+api-version: '1.21'
+author: ResistanceCore
+description: Christmas gift plugin with tier system and special effects
+commands:
+  christmasgift:
+    description: Main command for ChristmasGift plugin
+    usage: /<command> [give <amount>|reload]
+    aliases: [cgift, xmasgift]
+    permission: christmasgift.admin
+    permission-message: §cYou don't have permission to use this command!
+
+permissions:
+  christmasgift.admin:
+    description: Permission to use ChristmasGift admin commands
+    default: op
