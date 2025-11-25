@@ -23,13 +23,15 @@ public class GiftCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("christmasgift.admin")) {
-            sender.sendMessage("§cYou don't have permission to use this command!");
+            sender.sendMessage("§c§lChristmasGift §7» §cYou don't have permission to use this command!");
             return true;
         }
 
         if (args.length == 0) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage("§cThis command can only be used by players!");
+                sender.sendMessage("§c§lChristmasGift §7» §cThis command can only be used by players!");
+                sender.sendMessage("§e§lUsage: §7/" + label + " give <amount> <player>");
+                sender.sendMessage("§e§lUsage: §7/" + label + " reload");
                 return true;
             }
             openAdminGUI((Player) sender);
@@ -37,27 +39,63 @@ public class GiftCommand implements CommandExecutor {
         }
 
         if (args[0].equalsIgnoreCase("give")) {
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("§cThis command can only be used by players!");
-                return true;
-            }
-            
             if (args.length < 2) {
-                sender.sendMessage("§cUsage: /christmasgift give <amount>");
+                sender.sendMessage("§c§lChristmasGift §7» §cInvalid usage!");
+                if (sender instanceof Player) {
+                    sender.sendMessage("§e§lUsage: §7/" + label + " give <amount> [player]");
+                } else {
+                    sender.sendMessage("§e§lUsage: §7/" + label + " give <amount> <player>");
+                }
                 return true;
             }
 
+            // Parse amount
+            int amount;
             try {
-                int amount = Integer.parseInt(args[1]);
+                amount = Integer.parseInt(args[1]);
                 if (amount <= 0 || amount > 64) {
-                    sender.sendMessage("§cAmount must be between 1-64!");
+                    sender.sendMessage("§c§lChristmasGift §7» §cAmount must be between 1-64!");
                     return true;
                 }
-                giveGift((Player) sender, amount);
-                sender.sendMessage("§aYou have received " + amount + " Christmas Gift!");
             } catch (NumberFormatException e) {
-                sender.sendMessage("§cAmount must be a number!");
+                sender.sendMessage("§c§lChristmasGift §7» §cAmount must be a number!");
+                return true;
             }
+
+            // Determine target player
+            Player targetPlayer = null;
+            
+            if (args.length >= 3) {
+                // Target player specified
+                targetPlayer = plugin.getServer().getPlayer(args[2]);
+                if (targetPlayer == null || !targetPlayer.isOnline()) {
+                    sender.sendMessage("§c§lChristmasGift §7» §cPlayer '" + args[2] + "' not found or offline!");
+                    return true;
+                }
+            } else {
+                // No target specified
+                if (sender instanceof Player) {
+                    // Sender is player, give to self
+                    targetPlayer = (Player) sender;
+                } else {
+                    // Sender is console, require target player
+                    sender.sendMessage("§c§lChristmasGift §7» §cYou must specify a player when using this command from console!");
+                    sender.sendMessage("§e§lUsage: §7/" + label + " give <amount> <player>");
+                    return true;
+                }
+            }
+
+            // Give gift to target player
+            giveGift(targetPlayer, amount);
+            
+            // Send confirmation messages
+            if (sender instanceof Player && sender.equals(targetPlayer)) {
+                sender.sendMessage("§a§lChristmasGift §7» §aYou have received §e" + amount + "x §aChristmas Gift!");
+            } else {
+                sender.sendMessage("§a§lChristmasGift §7» §aSuccessfully gave §e" + amount + "x §aChristmas Gift to §e" + targetPlayer.getName() + "§a!");
+                targetPlayer.sendMessage("§a§lChristmasGift §7» §aYou have received §e" + amount + "x §aChristmas Gift§a!");
+            }
+            
             return true;
         }
 
@@ -80,7 +118,9 @@ public class GiftCommand implements CommandExecutor {
             }
         }
 
-        sender.sendMessage("§cUsage: /christmasgift [give <amount>|reload]");
+        sender.sendMessage("§c§lChristmasGift §7» §cInvalid usage!");
+        sender.sendMessage("§e§lUsage: §7/" + label + " give <amount> [player]");
+        sender.sendMessage("§e§lUsage: §7/" + label + " reload");
         return true;
     }
 
