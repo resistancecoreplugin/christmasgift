@@ -7,10 +7,13 @@ description: Christmas gift plugin with tier system and special effects
 commands:
   christmasgift:
     description: Main command for ChristmasGift plugin
-    usage: /<command> [give <amount>|reload]
+    usage: |
+      /<command> - Open admin GUI (player only)
+      /<command> give <amount> [player] - Give Christmas gifts
+      /<command> reload - Reload configuration
     aliases: [cgift, xmasgift]
     permission: christmasgift.admin
-    permission-message: §cYou don't have permission to use this command!
+    permission-message: §c§lChristmasGift §7» §cYou don't have permission to use this command!
 
 permissions:
   christmasgift.admin:
