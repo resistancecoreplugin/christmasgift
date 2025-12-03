@@ -11,16 +11,17 @@ import org.bukkit.ChatColor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ComboSystem {
     private final ChristmasGift plugin;
     private final Map<UUID, ComboData> playerCombos = new HashMap<>();
     
-    // Combo settings
-    private static final long COMBO_TIMEOUT = 10000; // 10 seconds
-    private static final int COMBO_TIER_1 = 3;  // 3+ gifts = 1.5x
-    private static final int COMBO_TIER_2 = 5;  // 5+ gifts = 2x
-    private static final int COMBO_TIER_3 = 10; // 10+ gifts = 3x
+    private static final long COMBO_TIMEOUT = 10000;
+    private static final int COMBO_TIER_1 = 3;
+    private static final int COMBO_TIER_2 = 5;
+    private static final int COMBO_TIER_3 = 10;
     
     public ComboSystem(ChristmasGift plugin) {
         this.plugin = plugin;
@@ -35,10 +36,7 @@ public class ComboSystem {
         data.lastOpenTime = System.currentTimeMillis();
         playerCombos.put(playerId, data);
         
-        // Display combo
         displayCombo(player, data.combo);
-        
-        // Play combo effects
         playComboEffects(player, data.combo);
     }
     
@@ -76,11 +74,8 @@ public class ComboSystem {
             message = colorCode + combo + "x Combo";
         }
         
-        // Send to action bar
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
-            new TextComponent(message));
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
         
-        // Send chat message for big combos
         if (combo >= COMBO_TIER_1) {
             player.sendMessage(message);
         }
@@ -90,29 +85,25 @@ public class ComboSystem {
         Location loc = player.getLocation().add(0, 1, 0);
         
         if (combo >= COMBO_TIER_3) {
-            // Epic combo effects
             player.playSound(loc, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 2.0f);
             player.playSound(loc, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1.0f, 1.5f);
-            spawnComboParticles(player, Particle.DRAGON_BREATH, 20);
-            spawnComboParticles(player, Particle.END_ROD, 15);
-            spawnComboParticles(player, Particle.ELECTRIC_SPARK, 10);
+            spawnComboParticles(player, Particle.FLAME, 20);
+            spawnComboParticles(player, Particle.CRIT, 15);
+            spawnComboParticles(player, Particle.ENCHANT, 10);
             
         } else if (combo >= COMBO_TIER_2) {
-            // Strong combo effects
             player.playSound(loc, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
             player.playSound(loc, Sound.BLOCK_BELL_USE, 1.0f, 2.0f);
             spawnComboParticles(player, Particle.FLAME, 15);
-            spawnComboParticles(player, Particle.FIREWORK, 10);
+            spawnComboParticles(player, Particle.CRIT, 10);
             
         } else if (combo >= COMBO_TIER_1) {
-            // Medium combo effects
             player.playSound(loc, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.5f);
             player.playSound(loc, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             spawnComboParticles(player, Particle.CRIT, 10);
-            spawnComboParticles(player, Particle.WITCH, 8);
+            spawnComboParticles(player, Particle.ENCHANT, 8);
             
         } else {
-            // Basic combo sound
             player.playSound(loc, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f + (combo * 0.1f));
         }
     }
@@ -130,7 +121,6 @@ public class ComboSystem {
                     return;
                 }
                 
-                // Spiral effect
                 double angle = ticks * Math.PI / 4;
                 double radius = 1.0;
                 
@@ -140,7 +130,7 @@ public class ComboSystem {
                     double z = Math.sin(offsetAngle) * radius;
                     
                     Location particleLoc = loc.clone().add(x, ticks * 0.1, z);
-                    player.getWorld().spawnParticle(particle, particleLoc, 1, 0, 0, 0, 0);
+                    player.getWorld().spawnParticle(particle, particleLoc, 1);
                 }
                 
                 ticks++;
@@ -148,32 +138,21 @@ public class ComboSystem {
         }.runTaskTimer(plugin, 0L, 1L);
     }
     
-    private void breakCombo(Player player) {
-        UUID playerId = player.getUniqueId();
-        ComboData data = playerCombos.get(playerId);
-        
-        if (data == null || data.combo < COMBO_TIER_1) {
-            playerCombos.remove(playerId);
-            return;
+    private void breakCombo(Player player, int comboCount) {
+        if (comboCount >= COMBO_TIER_1) {
+            String breakerMessage = ChatColor.RED.toString() + ChatColor.BOLD.toString() + "X COMBO BREAKER! X";
+            String infoMessage = ChatColor.GRAY + "Your " + comboCount + "x combo has ended!";
+            
+            player.sendMessage(breakerMessage);
+            player.sendMessage(infoMessage);
+            
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 0.5f);
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            
+            Location loc = player.getLocation().add(0, 1, 0);
+            player.getWorld().spawnParticle(Particle.SMOKE, loc, 20, 0.5, 0.5, 0.5);
+            player.getWorld().spawnParticle(Particle.CLOUD, loc, 10, 0.3, 0.3, 0.3);
         }
-        
-        // COMBO BREAKER announcement
-        String breakerMessage = ChatColor.RED.toString() + ChatColor.BOLD.toString() + "X COMBO BREAKER! X";
-        String infoMessage = ChatColor.GRAY + "Your " + data.combo + "x combo has ended!";
-        
-        player.sendMessage(breakerMessage);
-        player.sendMessage(infoMessage);
-        
-        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 0.5f);
-        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-        
-        // Combo break particles
-        Location loc = player.getLocation().add(0, 1, 0);
-        player.getWorld().spawnParticle(Particle.SMOKE, loc, 20, 0.5, 0.5, 0.5, 0.1);
-        player.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc, 10, 0.3, 0.3, 0.3, 0.05);
-        
-        // Clear combo
-        playerCombos.remove(playerId);
     }
     
     private void startComboChecker() {
@@ -181,22 +160,29 @@ public class ComboSystem {
             @Override
             public void run() {
                 long currentTime = System.currentTimeMillis();
+                List<UUID> toRemove = new ArrayList<>();
                 
-                playerCombos.entrySet().removeIf(entry -> {
+                for (Map.Entry<UUID, ComboData> entry : playerCombos.entrySet()) {
                     UUID playerId = entry.getKey();
                     ComboData data = entry.getValue();
                     
                     if (currentTime - data.lastOpenTime > COMBO_TIMEOUT) {
+                        toRemove.add(playerId);
+                    }
+                }
+                
+                for (UUID playerId : toRemove) {
+                    ComboData data = playerCombos.get(playerId);
+                    if (data != null) {
                         Player player = plugin.getServer().getPlayer(playerId);
                         if (player != null && player.isOnline()) {
-                            breakCombo(player);
+                            breakCombo(player, data.combo);
                         }
-                        return true;
+                        playerCombos.remove(playerId);
                     }
-                    return false;
-                });
+                }
             }
-        }.runTaskTimer(plugin, 20L, 20L); // Check every second
+        }.runTaskTimer(plugin, 20L, 20L);
     }
     
     public void clearCombo(Player player) {
