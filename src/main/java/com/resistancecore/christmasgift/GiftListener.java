@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 import java.util.Map;
 import java.util.HashMap;
@@ -15,7 +16,6 @@ import java.util.Iterator;
 public class GiftListener implements Listener {
     private final ChristmasGift plugin;
     private final Map<String, Long> cooldowns = new HashMap<>();
-    private static final long COOLDOWN_TIME = 1000; // 1 second cooldown
     private static final long CLEANUP_INTERVAL = 300000; // 5 minutes
 
     public GiftListener(ChristmasGift plugin) {
@@ -38,16 +38,20 @@ public class GiftListener implements Listener {
             return;
         }
 
-        // Check cooldown
+        // Prevent block placement
+        event.setCancelled(true);
+
+        // Check cooldown - READ FROM CONFIG
         String playerName = player.getName();
+        long cooldownTime = plugin.getConfig().getLong("settings.gift-cooldown", 1000);
+        
         if (cooldowns.containsKey(playerName)) {
             long timeElapsed = System.currentTimeMillis() - cooldowns.get(playerName);
-            if (timeElapsed < COOLDOWN_TIME) {
+            if (timeElapsed < cooldownTime) {
                 return;
             }
         }
 
-        event.setCancelled(true);
         cooldowns.put(playerName, System.currentTimeMillis());
 
         // Add combo
@@ -77,6 +81,18 @@ public class GiftListener implements Listener {
         }, 10L); // Start roulette after 0.5 seconds
         
         // Note: Reward is given by RouletteSystem after animation completes
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        ItemStack item = event.getItemInHand();
+        
+        // Prevent placing Christmas Gift chests
+        if (item != null && item.getType() == Material.CHEST && 
+            item.hasItemMeta() && item.getItemMeta().hasDisplayName() &&
+            item.getItemMeta().getDisplayName().contains("Christmas Gift")) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
